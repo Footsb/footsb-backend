@@ -1,30 +1,38 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { PingModule } from './modules/ping/ping.module';
+import config, { DatabaseConfig, ENTYTIES, MODULES } from './config/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      autoLoadEntities: true,
-      entities: [
-        // entities for database
-      ],
-      keepConnectionAlive: true,
-      migrations: [__dirname + '/migrations/*.ts'],
-      charset: 'utf8mb4_general_ci',
-      synchronize: true,
-      logging: true
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [config],
     }),
-    PingModule
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const db = configService.get<DatabaseConfig>('database');
+        return {
+          type: 'mysql',
+          host: db.host,
+          port: db.port,
+          username: db.username,
+          password: db.password,
+          database: db.database,
+          autoLoadEntities: true,
+          entities: ENTYTIES,
+          keepConnectionAlive: true,
+          migrations: [__dirname + '/migrations/*.ts'],
+          charset: 'utf8mb4_general_ci',
+          synchronize: true,
+          logging: true,
+        };
+      },
+    }),
+    ...MODULES,
   ],
   controllers: [],
   providers: [],
