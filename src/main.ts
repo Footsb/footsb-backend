@@ -8,14 +8,14 @@ declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    cors: true
+    cors: true,
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true
-    })
+      transform: true,
+    }),
   );
 
   const PORT = process.env.PORT || 8000;

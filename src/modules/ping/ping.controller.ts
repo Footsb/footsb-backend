@@ -4,7 +4,7 @@ import { PingService } from './ping.service';
 import { PingOutput } from './dto/ping.dto';
 import { ResponseFormatInterceptor } from 'src/common/interceptor/http-response-format.interceptor';
 
-@Controller('/api/ping')
+@Controller('/ping')
 @UseInterceptors(ResponseFormatInterceptor)
 export class PingController {
   constructor(private readonly pingService: PingService) {}
