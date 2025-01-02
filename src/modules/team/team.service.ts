@@ -1,10 +1,11 @@
 import { Repository } from 'typeorm';
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Team } from './entity/team.entity';
 import { TeamListDto } from './dto/find-all.dto';
+import { TeamDetailDto } from './dto/find-one.dto';
 
 @Injectable()
 export class TeamService {
@@ -50,8 +51,32 @@ export class TeamService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(teamId: number): Promise<TeamDetailDto> {
     try {
+      const [team] = await this.teamRepository.query(`
+        SELECT
+          t.*,
+          f.name  AS formation,
+          tt.type AS teamType,
+          lt.type AS levelType,
+          gt.type AS genderType,
+          u.name AS ownerName,
+          COUNT(ut.userId) AS memberCounts
+        FROM teams AS t
+        LEFT JOIN teamTypes   AS tt ON t.typeId = tt.id
+        LEFT JOIN genderTypes AS gt ON t.genderTypeId = gt.id
+        LEFT JOIN levelTypes  AS lt ON t.levelTypeId = lt.id
+        LEFT JOIN formations  AS f  ON t.formationId = f.id
+        LEFT JOIN users       AS u  ON t.ownerId = u.id
+        LEFT JOIN usersTeams  AS ut ON ut.teamId = ?
+        WHERE t.id = ?;
+      `, [ teamId, teamId ]);
+      
+      if (!team.id) {
+        throw new NotFoundException('INVALID_TEAM');
+      }
+      
+      return new TeamDetailDto(team);
     } catch (err) {
       console.log('Failed to get team by id!', err);
       throw err;
