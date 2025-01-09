@@ -29,9 +29,9 @@ export class TeamService {
           gt.type as genderType,
           COUNT (ut.userId) as memberCounts
         FROM teams t
-        LEFT JOIN teamTypes tt   ON t.typeId = tt.id
-        LEFT JOIN genderTypes gt ON t.genderTypeId = gt.id
-        LEFT JOIN usersTeams ut  ON t.id = ut.teamId
+        JOIN teamTypes tt   ON t.typeId = tt.id
+        JOIN genderTypes gt ON t.genderTypeId = gt.id
+        JOIN usersTeams ut  ON t.id = ut.teamId
         GROUP BY
           t.id,
           t.name,
@@ -63,12 +63,12 @@ export class TeamService {
           u.name AS ownerName,
           COUNT(ut.userId) AS memberCounts
         FROM teams AS t
-        LEFT JOIN teamTypes   AS tt ON t.typeId = tt.id
-        LEFT JOIN genderTypes AS gt ON t.genderTypeId = gt.id
-        LEFT JOIN levelTypes  AS lt ON t.levelTypeId = lt.id
-        LEFT JOIN formations  AS f  ON t.formationId = f.id
-        LEFT JOIN users       AS u  ON t.ownerId = u.id
-        LEFT JOIN usersTeams  AS ut ON ut.teamId = ?
+        JOIN teamTypes   AS tt ON t.typeId = tt.id
+        JOIN genderTypes AS gt ON t.genderTypeId = gt.id
+        JOIN levelTypes  AS lt ON t.levelTypeId = lt.id
+        JOIN formations  AS f  ON t.formationId = f.id
+        JOIN users       AS u  ON t.ownerId = u.id
+        JOIN usersTeams  AS ut ON ut.teamId = ?
         WHERE t.id = ?;
       `, [ teamId, teamId ]);
       
