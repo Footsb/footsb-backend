@@ -6,6 +6,9 @@ import { UserTeam } from 'src/modules/team/entity/user-team.entity';
 
 @Entity('users')
 export class User extends BaseCoreEntity {
+  @Column({ length: 50, nullable: true, default: null })
+  oAuthId: string
+
   @Column({ length: 45 })
   name: string;
 
@@ -15,10 +18,7 @@ export class User extends BaseCoreEntity {
   @Column({ length: 45, nullable: true })
   password?: string;
 
-  @Column({ length: 45 })
-  phonenumber: string;
-
-  @Column({ length: 45, nullable: true })
+  @Column({ length: 5000, nullable: true })
   profileImage: string;
 
   @ManyToOne(() => OAuthType)
