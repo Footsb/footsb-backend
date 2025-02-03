@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Query, Req } from "@nestjs/common";
+import { Controller, Get, Query } from "@nestjs/common";
 
 import { AuthService } from "./auth.service";
 
@@ -10,7 +10,6 @@ export class AuthController {
   
   @Get('/login/kakao')
   async oAuthLogin(
-    @Req() req: Request,
     @Query('code') query: string
   ) {
     return this.authService.oAuthKakaoLogin(query);
