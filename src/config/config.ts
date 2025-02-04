@@ -9,6 +9,7 @@ import { UserTeam } from 'src/modules/team/entity/user-team.entity';
 import { TeamModule } from 'src/modules/team/team.module';
 import { OAuthType } from 'src/modules/user/entity/oauth.entity';
 import { User } from 'src/modules/user/entity/user.entity';
+import { UserModule } from 'src/modules/user/user.module';
 
 export const ENTYTIES = [
   Team,
@@ -24,7 +25,8 @@ export const ENTYTIES = [
 export const MODULES = [
   PingModule,
   TeamModule,
-  AuthModule
+  AuthModule,
+  UserModule
 ];
 
 export type DatabaseConfig = {
