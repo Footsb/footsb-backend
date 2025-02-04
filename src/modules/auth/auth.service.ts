@@ -1,9 +1,8 @@
 import axios from 'axios';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 
 import { User } from '../user/entity/user.entity';
@@ -24,9 +23,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly dataSource: DataSource,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly dataSource: DataSource
   ) {
     const {
       accessTokenSecret,
