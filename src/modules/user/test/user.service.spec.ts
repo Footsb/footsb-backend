@@ -58,7 +58,9 @@ describe('🚀 UserService', () => {
         updatedAt: new Date("2025-01-01")
       };
       
-      const result = await userService.getUserProfile(1);
+      const mockUserId = 1;
+      const mockOAuthId = '3881916410';
+      const result = await userService.getUserProfile(mockUserId, mockOAuthId);
       expect(result).toEqual(mockUserProfile);
     });
   });

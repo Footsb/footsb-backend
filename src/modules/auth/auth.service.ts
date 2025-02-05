@@ -3,63 +3,18 @@ import { DataSource } from 'typeorm';
 
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from '@nestjs/jwt';
 
 import { User } from '../user/entity/user.entity';
-import { JwtConfig } from 'src/config/config';
-
-export type JwtPayload = {
-  id: number;
-  oAuthId: string;
-}
+import { JwtPayload, TokenService } from './token.service';
 
 @Injectable()
 export class AuthService {
-  private accessTokenSecret: string;
-  private accessTokenExp: string;
-  private refreshTokenSecret: string;
-  private refreshTokenExp: string;
-  
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
-    private readonly dataSource: DataSource
-  ) {
-    const {
-      accessTokenSecret,
-      accessTokenExp,
-      refreshTokenSecret,
-      refreshTokenExp,
-    } = this.configService.get<JwtConfig>('jwtConfig');
-
-    this.accessTokenSecret = accessTokenSecret;
-    this.accessTokenExp = accessTokenExp;
-    this.refreshTokenSecret = refreshTokenSecret;
-    this.refreshTokenExp = refreshTokenExp;
-  }
+    private readonly tokenService: TokenService
+  ) { }
   
-  async createAccessToken(payload: Record<string, any>): Promise<string> {
-    try {
-      return this.jwtService.signAsync(payload, {
-        secret: this.accessTokenSecret,
-        expiresIn: this.accessTokenExp,
-      });
-    } catch (err) {
-      console.error('Failed to create AccessToken!', err);
-    }
-  }
-
-  async createRefreshToken(payload: Record<string, any>): Promise<string> {
-    try {
-      return this.jwtService.signAsync(payload, {
-        secret: this.refreshTokenSecret,
-        expiresIn: this.refreshTokenExp,
-      });
-    } catch (err) {
-      console.error('Failed to create RefreshToken!', err);
-    }
-  }
-
   async getKakaoAccessToken(authorizationCode: string) {
     try {
       const URL = 'https://kauth.kakao.com/oauth/token';
@@ -172,19 +127,18 @@ export class AuthService {
         id,
         properties: { nickname, profile_image: profileImage },
         kakao_account: { email }
-        // kakao_account: { email, birthday, gender, age_range: ageRange }
       } = kakaoUser;
       
       const user = await this.getOrCreateUser(id, email, nickname, profileImage);
       
       const payload: JwtPayload = {
-        id: user.id,
+        userId: user.id,
         oAuthId: user.oAuthId
       };
 
       const [ accessToken, refreshToken ] = await Promise.all([
-        this.createAccessToken(payload),
-        this.createRefreshToken(payload)
+        this.tokenService.createAccessToken(payload),
+        this.tokenService.createRefreshToken(payload)
       ]);
 
       return { accessToken, refreshToken };
