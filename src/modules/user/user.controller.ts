@@ -1,19 +1,21 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Controller, Get, Req, UseGuards } from "@nestjs/common";
 
 import { UserService } from "./user.service";
 import { UserProfile } from "./dto/user-profile.dto";
+import { AuthGuard, RequestUser } from "../auth/guard/auth.guard";
 
 @Controller('users')
 export class UserController {
   constructor(
     private readonly userService: UserService
   ) {}
-
-  // 액세스 토큰을 검증하는 가드 필요 (테스트 코드 추가 필요)
-  @Get(':id')
+  
+  @Get('profiles')
+  @UseGuards(AuthGuard)
   async getUserProfile(
-    @Param('id') id: number
+    @Req() req: RequestUser
   ): Promise<UserProfile> {
-    return this.userService.getUserProfile(id);
+    const { userId, oAuthId } = req;
+    return await this.userService.getUserProfile(userId, oAuthId);
   }
 }

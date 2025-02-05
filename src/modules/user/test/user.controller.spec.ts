@@ -1,8 +1,14 @@
 import { Test } from '@nestjs/testing';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 import { UserController } from '../user.controller';
 import { UserService } from '../user.service';
 import { UserProfile } from '../dto/user-profile.dto';
+import { RequestUser } from 'src/modules/auth/guard/auth.guard';
+import { TokenService } from 'src/modules/auth/token.service';
+import { User } from '../entity/user.entity';
 
 describe('🚀 UserController', () => {
   let userController: UserController;
@@ -18,6 +24,25 @@ describe('🚀 UserController', () => {
             getUserProfile: jest.fn()
           },
         },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue({
+              accessTokenSecret: 'access-token-secret',
+              accessTokenExp: 'access-token-exp',
+              refreshTokenSecret: 'refresh-token-secret',
+              refreshTokenExp: 'refresh-token-exp',
+            }),
+          },
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            query: jest.fn()
+          }
+        },
+        TokenService,
+        JwtService,
       ],
     }).compile();
 
@@ -27,6 +52,10 @@ describe('🚀 UserController', () => {
 
   describe('📌 [GET] userProfile', () => {
     test('로그인한 유저의 프로필 정보를 조회할 수 있다!', async () => {
+      const mockReq: RequestUser = {
+        userId: 1,
+        oAuthId: "3881916410"
+      }
       const mockUserProfile: UserProfile = {
         id: 1,
         name: "풋스비",
@@ -39,7 +68,7 @@ describe('🚀 UserController', () => {
       };
       
       jest.spyOn(userService, 'getUserProfile').mockResolvedValue(mockUserProfile);
-      const result = await userController.getUserProfile(1);
+      const result = await userController.getUserProfile(mockReq);
       
       expect(result).toEqual(mockUserProfile);
     });

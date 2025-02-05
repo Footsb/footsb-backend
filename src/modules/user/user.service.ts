@@ -13,7 +13,7 @@ export class UserService {
     private readonly userRepository: Repository<User>
   ) { }
 
-  async getUserProfile(id: number): Promise<UserProfile> {
+  async getUserProfile(userId: number, oAuthId: string): Promise<UserProfile> {
     try {
       const [ user ] = await this.userRepository.query(`
         SELECT
@@ -27,8 +27,8 @@ export class UserService {
           o.type AS oAuthType
         FROM users AS u
         JOIN oauthTypes AS o ON o.id = u.oauthTypeId
-        WHERE u.id = ?
-      `, [ id ]);
+        WHERE u.id = ? AND u.oAuthId = ?
+      `, [ userId, oAuthId ]);
       
       return new UserProfile(user);
     } catch(err) {
