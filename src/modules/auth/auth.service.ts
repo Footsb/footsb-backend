@@ -1,18 +1,22 @@
 import axios from 'axios';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { InjectRepository } from '@nestjs/typeorm';
 
 import { User } from '../user/entity/user.entity';
 import { JwtPayload, TokenService } from './token.service';
+import { AccessTokenDto, LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
-    private readonly tokenService: TokenService
+    private readonly tokenService: TokenService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
   ) { }
   
   async getKakaoAccessToken(authorizationCode: string) {
@@ -118,7 +122,7 @@ export class AuthService {
     }
   }
 
-  async oAuthKakaoLogin(authorizationCode: string) {
+  async oAuthKakaoLogin(authorizationCode: string): Promise<LoginDto> {
     try {
       const kakaoAccessToken = await this.getKakaoAccessToken(authorizationCode);
       const kakaoUser = await this.getKakaoUserInfo(kakaoAccessToken);
@@ -144,6 +148,31 @@ export class AuthService {
       return { accessToken, refreshToken };
     } catch (err) {
       console.error('Failed to OAuth Login!', err);
+      throw err;
+    }
+  }
+
+  async generateAccessToken(_refreshToken: string): Promise<AccessTokenDto> {
+    try {
+      const refreshTokenDecoded = await this.tokenService.verifyRefreshToken(_refreshToken);
+      const { userId, oAuthId } = refreshTokenDecoded;
+      
+      if (!userId || !oAuthId) throw new UnauthorizedException('Invalid Payload!');
+      
+      const [ user ] = await this.userRepository.query(`
+        SELECT
+          u.id
+        FROM users u
+        WHERE u.id = ? AND u.oAuthId = ?
+      `, [ userId, oAuthId ]);
+      if (!user) throw new UnauthorizedException('Invalid User!');
+      
+      const payload = { userId, oAuthId };
+      const accessToken = await this.tokenService.createAccessToken(payload);
+      
+      return { accessToken };
+    } catch (err) {
+      console.error('Failed to generate AccessToken!', err);
       throw err;
     }
   }
